@@ -1,0 +1,15 @@
+local url1 = "https://raw.githubusercontent.com/TheBaconSurviver/satanist/refs/heads/main/spinny"
+local url2 = "https://raw.githubusercontent.com/TheBaconSurviver/chatscript/refs/heads/main/satanist"
+
+local function loadAndRunScript(url)
+    local scriptContent = game:HttpGet(url)
+    loadstring(scriptContent)()
+end
+
+spawn(function()
+    loadAndRunScript(url1)
+end)
+
+spawn(function()
+    loadAndRunScript(url2)
+end)
