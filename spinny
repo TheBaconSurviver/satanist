@@ -1,0 +1,102 @@
+local player = game.Players.LocalPlayer
+local part = nil
+
+local function findRandomPlayer()
+    local players = game.Players:GetPlayers()
+    local randomPlayer = nil
+
+    local availablePlayers = {}
+    for _, p in pairs(players) do
+        if p ~= player then
+            table.insert(availablePlayers, p)
+        end
+    end
+
+    if #availablePlayers > 0 then
+        randomPlayer = availablePlayers[math.random(1, #availablePlayers)]
+    end
+
+    return randomPlayer
+end
+
+local function movePartBelowPlayer(character)
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    
+    part = Instance.new("Part")
+    part.Size = Vector3.new(4, 1, 4)
+    part.Anchored = true
+    part.CanCollide = true
+    part.Parent = workspace
+
+    game:GetService("RunService").Heartbeat:Connect(function()
+        local offset = Vector3.new(0, -3.5, 0)
+        part.CFrame = CFrame.new(humanoidRootPart.Position + offset)
+    end)
+end
+
+local function getHumanoidRootPart(targetPlayer)
+    local targetCharacter = targetPlayer.Character
+    if targetCharacter then
+        local targetHumanoidRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+        if targetHumanoidRootPart then
+            return targetHumanoidRootPart
+        else
+            return nil
+        end
+    end
+    return nil
+end
+
+local function spinAroundPlayer(character, targetPlayer)
+    local targetHumanoidRootPart = getHumanoidRootPart(targetPlayer)
+    if not targetHumanoidRootPart then
+        warn("Target player doesn't have a valid HumanoidRootPart.")
+        return
+    end
+
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local radius = 10
+    local height = 5
+
+    local angle = 0
+    local startTime = tick()
+
+    while tick() - startTime < 5 do  -- Spin for 5 seconds
+        -- Calculate the new position for the character in a circular motion around the target player
+        local xOffset = radius * math.cos(angle)
+        local zOffset = radius * math.sin(angle)
+        local newPosition = targetHumanoidRootPart.Position + Vector3.new(xOffset, height, zOffset)
+
+        humanoidRootPart.CFrame = CFrame.new(newPosition)
+
+        humanoidRootPart.CFrame = CFrame.lookAt(humanoidRootPart.Position, targetHumanoidRootPart.Position)
+
+        angle = angle + 0.3
+
+        wait(0.001)
+    end
+end
+
+local function onCharacterAdded(character)
+    movePartBelowPlayer(character)
+
+    while true do
+        local randomPlayer = findRandomPlayer()
+        if randomPlayer then
+            spawn(function()
+                spinAroundPlayer(character, randomPlayer)
+            end)
+
+            wait(5)
+        else
+            warn("No other players found to target.")
+            break
+        end
+    end
+end
+
+player.CharacterAdded:Connect(onCharacterAdded)
+
+if player.Character then
+    onCharacterAdded(player.Character)
+end
